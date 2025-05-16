@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="GlobalErrorHandler">
+
+    <!-- Expression evaluation errors -->
+
+    <!-- Streaming limit exceeded -->
+
+<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9629fa2f-ed68-4ce1-b820-6b4e0f3d9ee1" type="DB:CONNECTIVITY">
+	<set-variable value="503" doc:name="httpStatus" doc:id="7463a470-8f9a-4e5f-8ba1-c9795c48b2fb" variableName="httpStatus" />
+	<set-variable value="Database is not reachable" doc:name="set-error-message" doc:id="afe84d9c-0cc7-4d68-943f-c17c010e736a" variableName="errorMessage" />
+	<flow-ref doc:name="build-common-error-response" doc:id="9bfcd8ce-b1e7-4f25-a197-dc4a1cfdf725" name="build-common-error-response" />
+</on-error-propagate>
+<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="32768081-e6ac-441f-9794-7dac47e3849a" type="APIKIT:NOT_FOUND">
+	<set-variable value="404" doc:name="httpStatus" doc:id="4e23d49b-c37a-4c16-8396-17246f3f08bc" variableName="httpStatus" />
+	<set-variable value="no matching resource path in the raml" doc:name="set-error-message" doc:id="bf485a3b-5f58-4d10-aa90-eb8d854be6de" variableName="errorMessage" />
+	<flow-ref doc:name="build-common-error-response" doc:id="8bdd5ffa-946d-4d08-9f5d-735ad0551e26" name="build-common-error-response" />
+</on-error-propagate>
+<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f608b4d4-62d2-4137-bb76-520a4105ec0c" type="APIKIT:BAD_REQUEST">
+	<set-variable value="400" doc:name="httpStatus" doc:id="0c7580cc-cfb9-4df5-a30c-4c095eeececa" variableName="httpStatus" />
+	<set-variable value="request doesn't match the schema" doc:name="set-error-message" doc:id="f9ea23fc-02b8-43f2-8073-1e770b030c48" variableName="errorMessage" />
+	<flow-ref doc:name="build-common-error-response" doc:id="13957acd-a342-43a4-bfbc-fa1eacf1f389" name="build-common-error-response" />
+</on-error-propagate>
+
+<on-error-propagate type="ANY">
+    <set-variable variableName="httpStatus" value="500" doc:name="httpStatus"/>
+    <set-variable variableName="errorMessage" value="Unexpected error occurred" doc:name="set-error-message"/>
+    <flow-ref name="build-common-error-response" doc:name="build-common-error-response"/>
+</on-error-propagate>
+    
+
+</error-handler>
+	<sub-flow name="build-common-error-response" doc:id="810205b8-c740-4a3c-92e2-a3bc0661de47" >
+		<ee:transform doc:name="error-payload" doc:id="b9d85c36-5fd1-41a9-9755-5091b5df1936" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	correlationId: correlationId,
+	"error": {
+		code: vars.httpStatus default 500,
+		message: vars.errorMessage default "Unknown error",
+		description: error.description default  "Unknown error processing the request",
+		timeStamp: now()
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="ERROR" doc:name="log-error" doc:id="3f78e8c1-dbb0-4a4e-86be-0b7c8a56d719" message="#[payload]" />
+	</sub-flow>
+	
+</mule>

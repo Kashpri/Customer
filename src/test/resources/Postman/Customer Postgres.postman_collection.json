@@ -1,0 +1,125 @@
+{
+	"info": {
+		"_postman_id": "1215218d-0984-4eac-845a-ad2c7abc6323",
+		"name": "Customer Postgres",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "23723034",
+		"_collection_link": "https://crimson-equinox-571941.postman.co/workspace/My-Workspace~94947221-6442-4206-8b91-46b538ee8ae3/collection/23723034-1215218d-0984-4eac-845a-ad2c7abc6323?action=share&source=collection_link&creator=23723034"
+	},
+	"item": [
+		{
+			"name": "create new customer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "username",
+						"value": "hdfhhf",
+						"type": "text"
+					},
+					{
+						"key": "password",
+						"value": "hdhdhd",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstname\": \"1Deep\",\n    \"lastname\": \"Perera\",\n    \"address\": \"38 james street, auckland\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8081/api/customer"
+			},
+			"response": []
+		},
+		{
+			"name": "list of customers",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "username",
+						"value": "hjshf",
+						"type": "text"
+					},
+					{
+						"key": "password",
+						"value": "fnjdei",
+						"type": "text"
+					}
+				],
+				"url": "http://localhost:8081/api/customers"
+			},
+			"response": []
+		},
+		{
+			"name": "retrieve customer by id",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"password": "djfufn",
+						"username": "fhfhfh"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8081/api/customer/67"
+			},
+			"response": []
+		},
+		{
+			"name": "update customer by id",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "username",
+						"value": "hdfhhf",
+						"type": "text"
+					},
+					{
+						"key": "password",
+						"value": "hdhdhd",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstname\": \"Deepa2\",\n    \"lastname\": \"Perera\",\n    \"address\": \"38 james street, auckland\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8081/api/customer/67"
+			},
+			"response": []
+		},
+		{
+			"name": "delete customer by Id",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "username",
+						"value": "hdfhhf",
+						"type": "text"
+					},
+					{
+						"key": "password",
+						"value": "hdhdhd",
+						"type": "text"
+					}
+				],
+				"url": "http://localhost:8081/api/customer/2"
+			},
+			"response": []
+		}
+	]
+}

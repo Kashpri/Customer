@@ -1,0 +1,84 @@
+#%RAML 1.0
+title: Customer API
+version: v1
+baseUri: https://api.customer.com/v1
+
+securitySchemes: 
+  basicAuth:
+    type: Basic Authentication
+securedBy:
+  - basicAuth
+  
+traits:
+  errorResponses: !include traits/customer.raml
+
+types:
+  customer: !include types/customer-type.raml
+  errorResponse: !include types/error-response-type.raml
+  
+/customers:
+  get:
+    is: [errorResponses]
+    description: List all customers
+    responses:
+      200:
+        body:
+          application/json:
+            type: customer[]
+            example: !include examples/customers.json
+  post:
+    is: [errorResponses]
+    description: Create a new customer
+    body:
+      application/json:
+        type: customer
+        example: !include examples/post-request.json
+           
+    responses:
+      201:
+        description: customer created
+        body:
+          application/json:
+            type: customer
+            example: !include examples/customer.json
+
+  /{id}:
+    is: [errorResponses]
+    uriParameters:
+      id:
+        type: integer
+        required: true
+    get:
+
+      description: Get a single customer by ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: customer
+              example: !include examples/customer.json
+    put:
+
+      description: Update the customer by ID
+      body:
+        application/json:
+          type: customer
+          example: !include examples/post-request.json       
+      responses:
+        200:
+          body:
+            application/json:
+              type: customer
+              example: !include examples/customer.json
+
+    delete:
+      
+      description: Delete the customer by ID
+      responses:
+        200:
+          description: customer deleted
+          body:
+            application/json:
+              type: object
+              example: {"message": "cusotmer with Id 101 is deleted"}
+        

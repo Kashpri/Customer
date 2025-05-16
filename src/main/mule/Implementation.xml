@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	
+	
+	
+	<sub-flow name="create-customer" doc:id="6249a375-8324-4904-8fe0-5745d9697bda" >
+		<logger level="INFO" doc:name="Start Logger" doc:id="28ac8a69-6ee4-49bd-a38a-5bfd7a7b17d2" message="create customer flow started " category="customer-postgres-api-create-customer"/>
+		<db:insert doc:name="Insert" doc:id="c6bd450f-4cf4-41d0-afd0-a661539bb085" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO customer (firstname, lastname, address)
+VALUES (:firstname, :lastname, :address)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"firstname": payload.firstname,
+	"lastname": payload.lastname,
+	"address":payload.address
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="response payload" doc:id="35d06088-6aff-4e39-8c23-ce90be891a4a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Customer created successfully"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="b02a559c-7f10-4b8e-b8b2-58cd70597b70" message="create customer flow ended " category="customer-postgres-api-create-customer"/>
+	</sub-flow>
+	<sub-flow name="update-customer" doc:id="f2cae8d7-b681-4d39-81af-82f7de2dd5bf" >
+		<logger level="INFO" doc:name="Start Logger" doc:id="28866941-3076-4728-a058-96b7bc2c7b18" message="update customer flow started " category=" customer-postgres-api-update-customer"/>
+		<set-variable value="#[attributes.uriParams.id]" doc:name="cust_id" doc:id="88f084a7-192d-4ae8-b01e-f2794aa3656f" variableName="cust_id"/>
+		<db:select doc:name="Select" doc:id="4593680b-e6fb-432e-8866-7e87fad5c438" config-ref="Database_Config" target="customerDetails">
+			<db:sql ><![CDATA[SELECT * FROM customer where customer_id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"id": vars.cust_id
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="e2d043af-9d06-42de-a8cf-a234dd59fbfe" >
+			<when expression='#[isEmpty(vars.customerDetails)]'>
+				<ee:transform doc:name="customer doesn't exist" doc:id="870b12d4-7257-4aa9-ae19-2bc09987ccad" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"customer doesn't exists"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="a2e31863-27ab-4c88-9932-e458ae266070" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+---
+
+{
+    "id": vars.cust_id,
+    "firstname": if (!isEmpty(payload.firstname)) payload.firstname else vars.customerdetails[0].firstname,
+    "lastname":if (!isEmpty(payload.lastname)) payload.lastname else vars.customerdetails[0].lastname,
+    "address": if (!isEmpty(payload.address)) payload.address else vars.customerdetails[0].address
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<db:update doc:name="Update" doc:id="8666df33-a96a-45e2-ab16-4c9a6f9aac8c" config-ref="Database_Config">
+			<db:sql><![CDATA[UPDATE customer SET firstname=:firstname, lastname=:lastname, address=:address where customer_id=:id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+
+	"firstname": payload.firstname,
+	"lastname": payload.lastname,
+	"address": payload.address,
+	"id": vars.cust_id
+}]]]></db:input-parameters>
+		</db:update>
+				<ee:transform doc:name="response payload" doc:id="c9801128-a3fe-42b0-93de-fd9e89e9f5ec">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"customer details updated successfully"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Logger" doc:id="b21293d7-2cb0-48fe-ae7d-5e01a2a095f7" message="update customer flow ended " category="customer-postgres-api-update-customer"/>
+	</sub-flow>
+	<sub-flow name="retrieve-customer-by-id" doc:id="c6aafe7b-9c6c-40d8-9f07-11b2a3db64ae">
+		<logger level="INFO" doc:name="Start Logger" doc:id="6972ce1d-555d-4a8a-b567-f59485c91450" message="retrieve customer by id flow started " category="customer-postgres-api-retrieve-customer-by-id"/>
+		<db:select doc:name="Select" doc:id="fa0bc8c2-3691-4fc9-a24a-b9a395224f8c" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM customer where customer_id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"id": attributes.uriParams.id
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="76340f19-f871-41d8-8d09-5cae56cbd339" >
+			<when expression="#[isEmpty(payload)]">
+				<ee:transform doc:name="customer doesn't exist" doc:id="4b0381d6-cbec-4d1a-b631-55a04e44ec93" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"customer doesn't exist"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="response payload" doc:id="4ca041a3-fa93-4f7d-9f15-98b1ec9bac6c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "id": payload[0].customer_id,
+    "firstname": payload[0].firstname,
+    "lastname":payload[0].lastname,
+    "address":payload[0].address
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Logger" doc:id="87eb0f64-ee1c-415f-b6ac-e3d2081714a4" message="retrieve customer by id flow ended" category="customer-postgres-api-retrieve-customer-by-id"/>
+	</sub-flow>
+	<sub-flow name="retrieve-customers" doc:id="bbf401d2-57e6-4348-b294-0932c1caff3c">
+		<logger level="INFO" doc:name="Start Logger" doc:id="71861fa4-b334-42be-a026-78044bfdf324" message="retrieve customers flow started " category="customer-postgres-api-retrieve-customers"/>
+		<db:select doc:name="Select" doc:id="c8cc3efd-f674-4ae7-ae9e-e86fba10b404" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM customer]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="response payload" doc:id="22f1c0c3-b238-4955-85a6-22bc1e268558">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	"id": $.customer_id,
+	"firstname": $.firstname,
+	"lastname": $.lastname,
+	"address": $.address
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="981716c7-8349-4ee2-8281-e441799e72a4" category="customer-postgres-api-retrieve-customers" message="retrieve customers flow ended "/>
+	</sub-flow>
+	<sub-flow name="delete-customer" doc:id="4ada20e5-b926-45db-92c5-c49b6ad1452f" >
+		<logger level="INFO" doc:name="Start Logger" doc:id="c3c49bef-f084-4e36-bf96-3c0be8682aed" message="delete customer flow started " category="customer-postgres-api-delete-customer"/>
+		<db:delete doc:name="Delete" doc:id="ab8fbbc6-0e24-418c-a622-e91ee9ee7282" config-ref="Database_Config">
+			<db:sql ><![CDATA[DELETE FROM customer where customer_id=:id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"id": attributes.uriParams.id
+}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="response payload" doc:id="00ad5169-65b5-47f2-8e68-ce5b1f7fafb4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"customer deleted successfully"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="b15b6162-b399-4225-83f7-7990e4cd416b" message="delete customer flow ended " category="customer-postgres-api-delete-customer"/>
+	</sub-flow>
+</mule>

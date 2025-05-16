@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <apikit:config name="customer-config" api="resource::cbe3cb5f-5811-4438-b836-8c41051b35f1:customer:1.0.3:raml:zip:customer.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="customer-main">
+        <http:listener config-ref="customer-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[output application/json --- payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="customer-config" />
+		<error-handler ref="GlobalErrorHandler" />
+    </flow>
+    <flow name="customer-console">
+        <http:listener config-ref="customer-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="customer-config" />
+		<error-handler ref="GlobalErrorHandler" />
+    </flow>
+    <flow name="put:\customer\(id):application\json:customer-config">
+        <flow-ref doc:name="update-customer" doc:id="6a9b6a2d-d1e1-49f5-a9ee-bf50ce67f163" name="update-customer" />
+    </flow>
+    <flow name="delete:\customer\(id):customer-config">
+        <flow-ref doc:name="delete-customer" doc:id="e89093d0-28dd-4c2a-921c-aaa7d33170ca" name="delete-customer" />
+    </flow>
+    <flow name="get:\customers:customer-config">
+        <flow-ref doc:name="retrieve-customer" doc:id="c9e20db1-a1d9-47f1-a46f-e70ae6b12e85" name="retrieve-customers" />
+    </flow>
+    <flow name="get:\customer\(id):customer-config">
+        <flow-ref doc:name="retrieve-customer-by-id" doc:id="a392d157-9aa3-46f1-8159-a891ce670499" name="retrieve-customer-by-id" />
+    </flow>
+    <flow name="post:\customer:application\json:customer-config">
+        <flow-ref doc:name="create-customer" doc:id="a6d36088-0c12-4c4d-82f5-f8ec98fd1c2f" name="create-customer" />
+    </flow>
+</mule>

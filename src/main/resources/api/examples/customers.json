@@ -1,0 +1,26 @@
+[
+  {
+    "id": 102,
+    "firstname": "Priyak",
+    "lastname": "Kash",
+    "address": "12 buckingham street, Wellington"
+  },
+  {
+    "id": 103,
+    "firstname": "Steve",
+    "lastname": "Watts",
+    "address": "13 buckingham street, Wellington"
+  },
+  {
+    "id": 104,
+    "firstname": "John",
+    "lastname": "Kim",
+    "address": "14 buckingham street, Wellington"
+  },
+  {
+    "id": 105,
+    "firstname": "Daniel",
+    "lastname": "Lim",
+    "address": "15 buckingham street, Wellington"
+  }
+]
