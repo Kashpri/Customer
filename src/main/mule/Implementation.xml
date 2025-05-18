@@ -149,13 +149,32 @@ payload map {
 	</sub-flow>
 	<sub-flow name="delete-customer" doc:id="4ada20e5-b926-45db-92c5-c49b6ad1452f" >
 		<logger level="INFO" doc:name="Start Logger" doc:id="c3c49bef-f084-4e36-bf96-3c0be8682aed" message="delete customer flow started " category="customer-postgres-api-delete-customer"/>
-		<db:delete doc:name="Delete" doc:id="ab8fbbc6-0e24-418c-a622-e91ee9ee7282" config-ref="Database_Config">
-			<db:sql ><![CDATA[DELETE FROM customer where customer_id=:id]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
-	"id": attributes.uriParams.id
+		<set-variable value="#[attributes.uriParams.id]" doc:name="custId" doc:id="dbb117f1-d1a7-44d6-b940-01294848ae00" variableName="custId"/>
+		<db:select doc:name="Select" doc:id="5882510e-584b-4d84-a415-342e5126870d" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM customer where customer_id = :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"id": vars.custId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="8d1b8627-c9b4-4d40-8876-119d484908c3">
+			<when expression="#[isEmpty(payload)]">
+				<ee:transform doc:name="customer doesn't exist" doc:id="7108b523-dbe5-49ab-ba83-052869b74c3a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"customer doesn't exist"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<db:delete doc:name="Delete" doc:id="ab8fbbc6-0e24-418c-a622-e91ee9ee7282" config-ref="Database_Config">
+			<db:sql><![CDATA[DELETE FROM customer where customer_id=:id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	"id": vars.custId
 }]]]></db:input-parameters>
 		</db:delete>
-		<ee:transform doc:name="response payload" doc:id="00ad5169-65b5-47f2-8e68-ce5b1f7fafb4">
+				<ee:transform doc:name="response payload" doc:id="00ad5169-65b5-47f2-8e68-ce5b1f7fafb4">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -163,6 +182,8 @@ output application/json
 "customer deleted successfully"]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+			</otherwise>
+		</choice>
 		<logger level="INFO" doc:name="End Logger" doc:id="b15b6162-b399-4225-83f7-7990e4cd416b" message="delete customer flow ended " category="customer-postgres-api-delete-customer"/>
 	</sub-flow>
 </mule>
